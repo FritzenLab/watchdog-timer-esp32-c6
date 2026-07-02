@@ -8,7 +8,6 @@
 #define LED_GPIO GPIO_NUM_1
 #define BUTTON_GPIO GPIO_NUM_18
 gptimer_handle_t timer = NULL;
-volatile bool finalCount = false;
 volatile bool buttonPressed = false;
 
 void setupGPIO()
@@ -39,13 +38,12 @@ bool IRAM_ATTR timer_callback(
     void *user_ctx)
 {
     static bool state = false;
-    if(buttonPressed == false && finalCount == false){
+    if(buttonPressed == false){
         state = !state;
         gpio_set_level(LED_GPIO, state);        
     }else{
         state = true;
-        gpio_set_level(LED_GPIO, state);
-        finalCount= true;
+        gpio_set_level(LED_GPIO, state);        
     }
     
     return false;
@@ -89,9 +87,13 @@ void setup() {
     .trigger_panic = true,
 };
 
-    ESP_ERROR_CHECK(esp_task_wdt_reconfigure(&wdt_config));
-    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
-   
+
+    Serial.begin(115200);
+    esp_err_t err = esp_task_wdt_reconfigure(&wdt_config);
+    Serial.println(esp_err_to_name(err));
+    ESP_ERROR_CHECK(err);
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));   
+    
 }
 
 void loop() {
@@ -101,9 +103,9 @@ void loop() {
         buttonPressed= true; // this makes the LED stop blinking and stay solid
     }
     // finalCount goes to true when the push button is pressed, effectively
-    // preventing the watchdog of being reset periodically, so after some time 
-    // it activates, resetting the microcontroller    
-    if(finalCount == false){ 
+    // preventing the watchdog of being reset periodically. After some time 
+    // the watchdog is triggered, resetting the microcontroller    
+    if(buttonPressed == false){ 
         esp_task_wdt_reset(); // Reset watchdog timer
     }
 }
