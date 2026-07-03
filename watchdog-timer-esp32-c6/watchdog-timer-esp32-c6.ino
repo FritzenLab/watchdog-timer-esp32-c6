@@ -5,8 +5,8 @@
 #include <esp_task_wdt.h>
 
 #define WDT_TIMEOUT 2 // time in seconds for the watchdog to activate
-#define LED_GPIO GPIO_NUM_1
-#define BUTTON_GPIO GPIO_NUM_18
+#define LED_GPIO GPIO_NUM_1 // D1 of Xiao ESP32-C6
+#define BUTTON_GPIO GPIO_NUM_18 // D10 of Xiao ESP32-C6
 gptimer_handle_t timer = NULL;
 volatile bool buttonPressed = false;
 
@@ -86,14 +86,11 @@ void setup() {
     .idle_core_mask = 0,
     .trigger_panic = true,
 };
-
-
-    Serial.begin(115200);
+    //Serial.begin(115200);
     esp_err_t err = esp_task_wdt_reconfigure(&wdt_config);
-    Serial.println(esp_err_to_name(err));
+    //Serial.println(esp_err_to_name(err));
     ESP_ERROR_CHECK(err);
-    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));   
-    
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));       
 }
 
 void loop() {
@@ -102,8 +99,8 @@ void loop() {
     {
         buttonPressed= true; // this makes the LED stop blinking and stay solid
     }
-    // finalCount goes to true when the push button is pressed, effectively
-    // preventing the watchdog of being reset periodically. After some time 
+    // buttonPressed goes to true when the push button is pressed, effectively
+    // preventing the watchdog from being reset periodically. After some time 
     // the watchdog is triggered, resetting the microcontroller    
     if(buttonPressed == false){ 
         esp_task_wdt_reset(); // Reset watchdog timer
